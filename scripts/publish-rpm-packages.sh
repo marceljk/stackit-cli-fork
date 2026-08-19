@@ -4,7 +4,7 @@
 # Usage: ./publish-rpm-packages.sh
 set -eo pipefail
 
-PACKAGES_BUCKET_URL="https://packages.stackit.cloud"
+PACKAGES_BUCKET_URL="https://marcelj-testing-cli-release.object.storage.eu01.onstackit.cloud"
 PUBLIC_KEY_FILE_PATH="keys/key.gpg"
 RPM_REPO_PATH="rpm/cli"
 RPM_BUCKET_NAME="distribution"

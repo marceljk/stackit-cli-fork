@@ -19,8 +19,8 @@ jobs:
   goreleaser:
     name: Release
     runs-on: macOS-latest
-    env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+#    env:
+#      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
@@ -50,35 +50,35 @@ jobs:
           chmod 600 "$KEY_PATH"
           echo "GPG_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
       
-      - name: Set up keychain
-        run: |
-          echo -n $SIGNING_CERTIFICATE_BASE64 | base64 -d -o ./ApplicationID.p12
-          KEYCHAIN_PATH=$RUNNER_TEMP/ios_signing_temp.keychain-db
-          security create-keychain -p  "${{ secrets.TEMP_KEYCHAIN }}" $KEYCHAIN_PATH
-          security default-keychain -s $KEYCHAIN_PATH
-          security unlock-keychain -p "${{ secrets.TEMP_KEYCHAIN }}" $KEYCHAIN_PATH
-          # the keychain gets locked automatically after 300s, so we have to extend this interval to e.g. 900 seconds
-          security set-keychain-settings -lut 900
-          security import ./ApplicationID.p12 -P "${{ secrets.APPLICATION_ID }}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
-          echo -n $AUTHKEY_BASE64 | base64 -d -o ./AuthKey.p8
-          xcrun notarytool store-credentials stackit-cli -i $APPLE_ISSUER -d $APPLE_KEY_ID -k AuthKey.p8 --keychain $KEYCHAIN_PATH
-          rm ./ApplicationID.p12
-          rm ./AuthKey.p8
-        env:
-          APPLE_ISSUER: ${{ secrets.APPLE_ISSUER }}
-          APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
-          SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLICATION_ID_CERT }}
-          AUTHKEY_BASE64: ${{ secrets.APPLE_API_KEY }}
-      - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v3
+#      - name: Set up keychain
+#        run: |
+#          echo -n $SIGNING_CERTIFICATE_BASE64 | base64 -d -o ./ApplicationID.p12
+#          KEYCHAIN_PATH=$RUNNER_TEMP/ios_signing_temp.keychain-db
+#          security create-keychain -p  "${{ secrets.TEMP_KEYCHAIN }}" $KEYCHAIN_PATH
+#          security default-keychain -s $KEYCHAIN_PATH
+#          security unlock-keychain -p "${{ secrets.TEMP_KEYCHAIN }}" $KEYCHAIN_PATH
+#          # the keychain gets locked automatically after 300s, so we have to extend this interval to e.g. 900 seconds
+#          security set-keychain-settings -lut 900
+#          security import ./ApplicationID.p12 -P "${{ secrets.APPLICATION_ID }}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+#          security list-keychain -d user -s $KEYCHAIN_PATH
+#          echo -n $AUTHKEY_BASE64 | base64 -d -o ./AuthKey.p8
+#          xcrun notarytool store-credentials stackit-cli -i $APPLE_ISSUER -d $APPLE_KEY_ID -k AuthKey.p8 --keychain $KEYCHAIN_PATH
+#          rm ./ApplicationID.p12
+#          rm ./AuthKey.p8
+#        env:
+#          APPLE_ISSUER: ${{ secrets.APPLE_ISSUER }}
+#          APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
+#          SIGNING_CERTIFICATE_BASE64: ${{ secrets.APPLICATION_ID_CERT }}
+#          AUTHKEY_BASE64: ${{ secrets.APPLE_API_KEY }}
+#      - name: Install Snapcraft
+#        uses: samuelmeuli/action-snapcraft@v3
       
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7.2.3
         with:
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.CLI_RELEASE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GPG_KEY_PATH: ${{ env.GPG_KEY_PATH }}
           # nfpm-rpm signing needs this env to be set.

@@ -40,6 +40,7 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          fingerprint: "E472CE3921B56FFB9C9B715196E017295C8CB09B"
       
       # nfpm-rpm signing needs gpg provided as filepath
       # https://goreleaser.com/customization/nfpm/
@@ -124,6 +125,7 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          fingerprint: "E472CE3921B56FFB9C9B715196E017295C8CB09B"
       
       - name: Publish packages to APT repo
         if: contains(github.ref_name, '-') == false
@@ -163,6 +165,7 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          fingerprint: "E472CE3921B56FFB9C9B715196E017295C8CB09B"
 
       - name: Publish RPM packages
         if: contains(github.ref_name, '-') == false

@@ -4,10 +4,10 @@ before:
   hooks:
     - go mod tidy
     # Shell completion files
-#    - mkdir -p ./completions
-#    - sh -c 'go run ./main.go completion zsh > ./completions/stackit.zsh'
-#    - sh -c 'go run ./main.go completion bash > ./completions/stackit.bash'
-#    - sh -c 'go run ./main.go completion fish > ./completions/stackit.fish'
+    - mkdir -p ./completions
+    - sh -c 'go run ./main.go completion zsh > ./completions/stackit.zsh'
+    - sh -c 'go run ./main.go completion bash > ./completions/stackit.bash'
+    - sh -c 'go run ./main.go completion fish > ./completions/stackit.fish'
 
 builds:
   - id: linux-builds
@@ -74,8 +74,8 @@ archives:
       - freebsd-builds
     formats: [ 'tar.gz' ]
     files:
-#      - src: ./completions/*
-#        dst: completions
+      - src: ./completions/*
+        dst: completions
       - LICENSE.md
       - README.md
 
@@ -108,18 +108,18 @@ nfpms:
         dst: /usr/share/doc/stackit/copyright
         file_info:
           mode: 0644
-#      - src: ./completions/stackit.bash
-#        dst: /usr/share/bash-completion/completions/stackit
-#        file_info:
-#          mode: 0644
-#      - src: ./completions/stackit.zsh
-#        dst: /usr/share/zsh/vendor-completions/_stackit
-#        file_info:
-#          mode: 0644
-#      - src: ./completions/stackit.fish
-#        dst: /usr/share/fish/vendor_completions.d/stackit.fish
-#        file_info:
-#          mode: 0644
+      - src: ./completions/stackit.bash
+        dst: /usr/share/bash-completion/completions/stackit
+        file_info:
+          mode: 0644
+      - src: ./completions/stackit.zsh
+        dst: /usr/share/zsh/vendor-completions/_stackit
+        file_info:
+          mode: 0644
+      - src: ./completions/stackit.fish
+        dst: /usr/share/fish/vendor_completions.d/stackit.fish
+        file_info:
+          mode: 0644
     formats:
       - deb
       - rpm

@@ -23,6 +23,19 @@ jobs:
       - name: Build
         run: make build
 
+      - name: Print GitHub OIDC claims
+        run: |
+          # Fetch the OIDC ID Token using GitHub runner environment variables
+          RAW_JWT=$(curl -sLS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.value')
+
+          echo "=== Full OIDC Token Payload ==="
+          echo "$RAW_JWT" | jq -R 'split(".") | .[1] | @base64d | fromjson'
+
+          echo "=== Subject Claim (sub) ==="
+          echo "$RAW_JWT" | jq -R -r 'split(".") | .[1] | @base64d | fromjson | .sub'
+
       - name: Get access token
         run: |
           TOKEN=$(./bin/stackit auth activate-service-account --use-oidc --only-print-access-token --verbosity debug)

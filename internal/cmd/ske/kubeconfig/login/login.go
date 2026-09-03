@@ -444,15 +444,22 @@ func workloadIdentityConfigured() bool {
 	if os.Getenv(envServiceAccountEmail) == "" {
 		return false
 	}
-	if os.Getenv(clients.FederatedTokenFileEnv) != "" {
-		return true
-	}
-	fileInfo, err := os.Stat(defaultFederatedTokenPath)
-	return err == nil && !fileInfo.IsDir()
+	if auth.IsOIDCEnabled() {
+        return true
+    }
+    _, err := auth.OIDCTokenFunc()
+    return err == nil
 }
 
 func getWorkloadIdentityAccessToken() (string, error) {
-	roundTripper, err := sdkAuth.SetupAuth(&sdkConfig.Configuration{WorkloadIdentityFederation: true})
+	oidcFunc, err := auth.OIDCTokenFunc()
+	if err != nil {
+        return "", err
+    }
+	roundTripper, err := sdkAuth.SetupAuth(&sdkConfig.Configuration{
+		WorkloadIdentityFederation: true,
+		ServiceAccountFederatedTokenFunc: oidcFunc,
+	})
 	if err != nil {
 		return "", fmt.Errorf("configure workload identity federation: %w", err)
 	}

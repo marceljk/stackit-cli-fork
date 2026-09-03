@@ -24,7 +24,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	sdkAuth "github.com/stackitcloud/stackit-sdk-go/core/auth"
-	"github.com/stackitcloud/stackit-sdk-go/core/clients"
 	sdkConfig "github.com/stackitcloud/stackit-sdk-go/core/config"
 	ske "github.com/stackitcloud/stackit-sdk-go/services/ske/v2api"
 

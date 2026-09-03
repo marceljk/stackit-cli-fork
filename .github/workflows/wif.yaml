@@ -42,13 +42,6 @@ jobs:
       - name: Add binary to PATH
         run: echo "$(pwd)/bin" >> "$GITHUB_PATH"
 
-      - name: Obtain Access Token (for creating initial kubeconfig)
-        id: auth
-        run: |
-          TOKEN=$(./bin/stackit auth activate-service-account --use-oidc --only-print-access-token --verbosity debug)
-          echo "::add-mask::$TOKEN"
-          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
-
       - name: Build Barebones Kubeconfig from Scratch
         run: |
           # 1. Set the cluster server endpoint (get it once from STACKIT Portal/describe)

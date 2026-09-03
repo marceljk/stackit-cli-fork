@@ -2,6 +2,19 @@ name: WIF
 
 on:
   workflow_dispatch:
+    inputs:
+      cluster_name:
+        description: "SKE Cluster Name to test kubectl against"
+        required: true
+        default: "mj-test"
+      organization_id:
+        description: "Organization ID for the SKE cluster"
+        required: true
+        default: "d83100e9-9be4-45ad-b874-28166786ec0c"
+      region:
+        description: "STACKIT Region"
+        required: false
+        default: "eu01"
 
 jobs:
   main:
@@ -10,6 +23,9 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    env:
+      PROJECT_ID: 66b03760-125b-4c63-9624-741e8a418c02
+      STACKIT_SERVICE_ACCOUNT_EMAIL: marcelj-2g78bs1@sa.stackit.cloud
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
@@ -23,29 +39,76 @@ jobs:
       - name: Build
         run: make build
 
-      - name: Print GitHub OIDC claims
-        run: |
-          # Fetch the OIDC ID Token using GitHub runner environment variables
-          RAW_JWT=$(curl -sLS \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.value')
+      - name: Add binary to PATH
+        run: echo "$(pwd)/bin" >> "$GITHUB_PATH"
 
-          echo "=== Full OIDC Token Payload ==="
-          echo "$RAW_JWT" | jq -R 'split(".") | .[1] | @base64d | fromjson'
-
-          echo "=== Subject Claim (sub) ==="
-          echo "$RAW_JWT" | jq -R -r 'split(".") | .[1] | @base64d | fromjson | .sub'
-
-      - name: Get access token
+      - name: Obtain Access Token (for creating initial kubeconfig)
+        id: auth
         run: |
           TOKEN=$(./bin/stackit auth activate-service-account --use-oidc --only-print-access-token --verbosity debug)
           echo "::add-mask::$TOKEN"
-          echo "STACKIT_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
-        env:
-          STACKIT_SERVICE_ACCOUNT_EMAIL: marcelj-2g78bs1@sa.stackit.cloud
 
-      - name: Execute command
-        run: ./bin/stackit network list --project-id "$PROJECT_ID"
+      - name: Create Base Kubeconfig
+        run: |
+          ./bin/stackit ske kubeconfig create "${{ github.event.inputs.cluster_name || 'my-cluster' }}" \
+            --idp \
+            --filepath /tmp/ske-kubeconfig.yaml \
+            --project-id "$PROJECT_ID" \
+            --region "${{ github.event.inputs.region || 'eu01' }}" \
+            --assume-yes
         env:
-          PROJECT_ID: 66b03760-125b-4c63-9624-741e8a418c02
+          STACKIT_ACCESS_TOKEN: ${{ steps.auth.outputs.token }}
+
+      - name: Configure explicit IdP Exec Provider in Kubeconfig
+        run: |
+          CLUSTER_NAME="${{ github.event.inputs.cluster_name || 'my-cluster' }}"
+          ORG_ID="${{ github.event.inputs.organization_id || '00000000-0000-0000-0000-000000000000' }}"
+          REGION="${{ github.event.inputs.region || 'eu01' }}"
+          
+          # Find the user name associated with the current context
+          CURRENT_USER=$(kubectl --kubeconfig /tmp/ske-kubeconfig.yaml config view -o jsonpath="{.contexts[?(@.name=='$CLUSTER_NAME')].context.user}")
+
+          # Update the user exec block to explicitly pass all cluster coordinates as CLI flags
+          kubectl --kubeconfig /tmp/ske-kubeconfig.yaml config set-credentials "$CLUSTER_NAME" \
+            --exec-api-version="client.authentication.k8s.io/v1" \
+            --exec-command="stackit" \
+            --exec-arg="ske" \
+            --exec-arg="kubeconfig" \
+            --exec-arg="login" \
+            --exec-arg="--idp" \
+            --exec-arg="--cluster-name" \
+            --exec-arg="$CLUSTER_NAME" \
+            --exec-arg="--organization-id" \
+            --exec-arg="$ORG_ID" \
+            --exec-arg="--project-id" \
+            --exec-arg="$PROJECT_ID" \
+            --exec-arg="--region" \
+            --exec-arg="$REGION"
+
+
+      - name: Test direct login command (Diagnostics)
+        run: |
+          CLUSTER_NAME="${{ github.event.inputs.cluster_name || 'my-cluster' }}"
+          ORG_ID="${{ github.event.inputs.organization_id || '00000000-0000-0000-0000-000000000000' }}"
+          REGION="${{ github.event.inputs.region || 'eu01' }}"
+
+          KUBERNETES_EXEC_INFO='{"apiVersion":"client.authentication.k8s.io/v1","kind":"ExecCredential"}' \
+            ./bin/stackit ske kubeconfig login \
+              --idp \
+              --cluster-name "$CLUSTER_NAME" \
+              --organization-id "$ORG_ID" \
+              --project-id "$PROJECT_ID" \
+              --region "$REGION"
+        env:
+          STACKIT_SERVICE_ACCOUNT_EMAIL: ${{ env.STACKIT_SERVICE_ACCOUNT_EMAIL }}
+
+
+      - name: Test kubectl with explicit IdP login command via WIF
+        run: |
+          kubectl --kubeconfig /tmp/ske-kubeconfig.yaml cluster-info
+          kubectl --kubeconfig /tmp/ske-kubeconfig.yaml get nodes
+        env:
+          # STACKIT_ACCESS_TOKEN is intentionally unset so stackit ske kubeconfig login
+          # acquires credentials via GitHub Actions ambient OIDC / WIF
+          STACKIT_SERVICE_ACCOUNT_EMAIL: ${{ env.STACKIT_SERVICE_ACCOUNT_EMAIL }}

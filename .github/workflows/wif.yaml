@@ -35,5 +35,4 @@ jobs:
       - name: Execute command
         run: ./bin/stackit network list --project-id "$PROJECT_ID"
         env:
-          STACKIT_ACCESS_TOKEN: ${{ secrets.STACKIT_ACCESS_TOKEN }}
           PROJECT_ID: 66b03760-125b-4c63-9624-741e8a418c02

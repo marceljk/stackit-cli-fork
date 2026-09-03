@@ -49,66 +49,42 @@ jobs:
           echo "::add-mask::$TOKEN"
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
 
-      - name: Create Base Kubeconfig
+      - name: Build Barebones Kubeconfig from Scratch
         run: |
-          ./bin/stackit ske kubeconfig create "${{ github.event.inputs.cluster_name || 'my-cluster' }}" \
-            --idp \
-            --filepath /tmp/ske-kubeconfig.yaml \
-            --project-id "$PROJECT_ID" \
-            --region "${{ github.event.inputs.region || 'eu01' }}" \
-            --assume-yes
-        env:
-          STACKIT_ACCESS_TOKEN: ${{ steps.auth.outputs.token }}
+          # 1. Set the cluster server endpoint (get it once from STACKIT Portal/describe)
+          kubectl --kubeconfig /tmp/manual-kubeconfig.yaml config set-cluster my-cluster \
+            --server="https://api.mj-test.60e7c9223b.s.ske.eu01.onstackit.cloud" \
+            --insecure-skip-tls-verify=true
 
-      - name: Configure explicit IdP Exec Provider in Kubeconfig
-        run: |
-          CLUSTER_NAME="${{ github.event.inputs.cluster_name || 'my-cluster' }}"
-          ORG_ID="${{ github.event.inputs.organization_id || '00000000-0000-0000-0000-000000000000' }}"
-          REGION="${{ github.event.inputs.region || 'eu01' }}"
-          
-          # Find the user name associated with the current context
-          CURRENT_USER=$(kubectl --kubeconfig /tmp/ske-kubeconfig.yaml config view -o jsonpath="{.contexts[?(@.name=='$CLUSTER_NAME')].context.user}")
+          # 2. Set the context
+          kubectl --kubeconfig /tmp/manual-kubeconfig.yaml config set-context my-cluster \
+            --cluster=my-cluster \
+            --user=my-sa-user
 
-          # Update the user exec block to explicitly pass all cluster coordinates as CLI flags
-          kubectl --kubeconfig /tmp/ske-kubeconfig.yaml config set-credentials "$CLUSTER_NAME" \
+          # 3. Set the active context
+          kubectl --kubeconfig /tmp/manual-kubeconfig.yaml config use-context my-cluster
+
+          # 4. Set the exec credential plugin (the new command)
+          kubectl --kubeconfig /tmp/manual-kubeconfig.yaml config set-credentials my-sa-user \
             --exec-api-version="client.authentication.k8s.io/v1" \
+            --exec-interactive-mode="Never" \
             --exec-command="stackit" \
             --exec-arg="ske" \
             --exec-arg="kubeconfig" \
             --exec-arg="login" \
             --exec-arg="--idp" \
             --exec-arg="--cluster-name" \
-            --exec-arg="$CLUSTER_NAME" \
+            --exec-arg="${{ github.event.inputs.cluster_name }}" \
             --exec-arg="--organization-id" \
-            --exec-arg="$ORG_ID" \
+            --exec-arg="${{ github.event.inputs.organization_id }}" \
             --exec-arg="--project-id" \
             --exec-arg="$PROJECT_ID" \
             --exec-arg="--region" \
-            --exec-arg="$REGION"
+            --exec-arg="${{ github.event.inputs.region || 'eu01' }}"
 
-
-      - name: Test direct login command (Diagnostics)
+      - name: Test Kubectl against barebones kubeconfig
         run: |
-          CLUSTER_NAME="${{ github.event.inputs.cluster_name || 'my-cluster' }}"
-          ORG_ID="${{ github.event.inputs.organization_id || '00000000-0000-0000-0000-000000000000' }}"
-          REGION="${{ github.event.inputs.region || 'eu01' }}"
-
-          KUBERNETES_EXEC_INFO='{"apiVersion":"client.authentication.k8s.io/v1","kind":"ExecCredential"}' \
-            ./bin/stackit ske kubeconfig login \
-              --idp \
-              --cluster-name "$CLUSTER_NAME" \
-              --organization-id "$ORG_ID" \
-              --project-id "$PROJECT_ID" \
-              --region "$REGION"
+          kubectl --kubeconfig /tmp/manual-kubeconfig.yaml cluster-info
+          kubectl --kubeconfig /tmp/manual-kubeconfig.yaml get nodes
         env:
-          STACKIT_SERVICE_ACCOUNT_EMAIL: ${{ env.STACKIT_SERVICE_ACCOUNT_EMAIL }}
-
-
-      - name: Test kubectl with explicit IdP login command via WIF
-        run: |
-          kubectl --kubeconfig /tmp/ske-kubeconfig.yaml cluster-info
-          kubectl --kubeconfig /tmp/ske-kubeconfig.yaml get nodes
-        env:
-          # STACKIT_ACCESS_TOKEN is intentionally unset so stackit ske kubeconfig login
-          # acquires credentials via GitHub Actions ambient OIDC / WIF
           STACKIT_SERVICE_ACCOUNT_EMAIL: ${{ env.STACKIT_SERVICE_ACCOUNT_EMAIL }}

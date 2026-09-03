@@ -25,7 +25,7 @@ jobs:
 
       - name: Get access token
         run: |
-          TOKEN=$(./bin/stackit auth activate-service-account --use-oidc --only-print-access-token)
+          TOKEN=$(./bin/stackit auth activate-service-account --use-oidc --only-print-access-token --verbosity debug)
           echo "::add-mask::$TOKEN"
           echo "STACKIT_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"

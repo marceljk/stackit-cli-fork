@@ -138,11 +138,11 @@ homebrew_casks:
       branch: "{{.ProjectName}}-{{.Version}}"
       pull_request:
         enabled: true
+        token: "{{ .Env.HOMEBREW_RELEASE_TOKEN }}"
         base:
           owner: marceljk
           name: homebrew-tap-stackit-cli-fork
           branch: main
-          token: "{{ .Env.HOMEBREW_RELEASE_TOKEN }}"
     commit_author:
       name: CLI Release Bot
       email: noreply@stackit.de

@@ -134,7 +134,7 @@ homebrew_casks:
     directory: Casks
     repository:
       owner: marceljk
-      name: homebrew-tap-stackit-cli-fork
+      name: homebrew-tap-fork
       branch: "{{.ProjectName}}-{{.Version}}"
       token: "{{ .Env.HOMEBREW_RELEASE_TOKEN }}"
       pull_request:

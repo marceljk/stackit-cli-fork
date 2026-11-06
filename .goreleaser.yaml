@@ -10,19 +10,19 @@ before:
     - sh -c 'go run ./main.go completion fish > ./completions/stackit.fish'
 
 builds:
-  - id: linux-builds
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-    binary: "stackit"
-
-  - id: windows-builds
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - windows
-    binary: "stackit"
+#  - id: linux-builds
+#    env:
+#      - CGO_ENABLED=0
+#    goos:
+#      - linux
+#    binary: "stackit"
+#
+#  - id: windows-builds
+#    env:
+#      - CGO_ENABLED=0
+#    goos:
+#      - windows
+#    binary: "stackit"
 
   - id: macos-builds
     env:
@@ -35,43 +35,43 @@ builds:
     goarch:
       - arm64
       - amd64
-    hooks:
-      post:
-        # Signing
-        - cmd: codesign -s "{{.Env.APPLE_APPLICATION_IDENTITY}}" -f -v --options=runtime "dist/macos-builds_{{.Target}}/{{.Name}}"
-          output: true
-        - cmd: codesign -vvv --deep --strict "dist/macos-builds_{{.Target}}/{{.Name}}"
-          output: true
-        - cmd: hdiutil create -volname "STACKIT-CLI" -srcfolder "dist/macos-builds_{{.Target}}/{{.Name}}" -ov -format UDZO "dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg"
-          output: true
-        - cmd: codesign -s "{{.Env.APPLE_APPLICATION_IDENTITY}}" -f -v --options=runtime "dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg"
-          output: true
-        - cmd: xcrun notarytool submit --keychain-profile "stackit-cli" --wait --progress dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg
-          output: true
-        - cmd: xcrun stapler staple "dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg"
-          output: true
-        - cmd: spctl -a -t open --context context:primary-signature -v dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg
-          output: true
+#    hooks:
+#      post:
+#        # Signing
+#        - cmd: codesign -s "{{.Env.APPLE_APPLICATION_IDENTITY}}" -f -v --options=runtime "dist/macos-builds_{{.Target}}/{{.Name}}"
+#          output: true
+#        - cmd: codesign -vvv --deep --strict "dist/macos-builds_{{.Target}}/{{.Name}}"
+#          output: true
+#        - cmd: hdiutil create -volname "STACKIT-CLI" -srcfolder "dist/macos-builds_{{.Target}}/{{.Name}}" -ov -format UDZO "dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg"
+#          output: true
+#        - cmd: codesign -s "{{.Env.APPLE_APPLICATION_IDENTITY}}" -f -v --options=runtime "dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg"
+#          output: true
+#        - cmd: xcrun notarytool submit --keychain-profile "stackit-cli" --wait --progress dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg
+#          output: true
+#        - cmd: xcrun stapler staple "dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg"
+#          output: true
+#        - cmd: spctl -a -t open --context context:primary-signature -v dist/{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.dmg
+#          output: true
 
-  - id: freebsd-builds
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - freebsd
-    goarch:
-      - arm64
-      - amd64
-    binary: "stackit"
-
+#  - id: freebsd-builds
+#    env:
+#      - CGO_ENABLED=0
+#    goos:
+#      - freebsd
+#    goarch:
+#      - arm64
+#      - amd64
+#    binary: "stackit"
+#
 archives:
-  - id: windows-archives
-    ids:
-      - windows-builds
-    formats: [ 'zip' ]
+#  - id: windows-archives
+#    ids:
+#      - windows-builds
+#    formats: [ 'zip' ]
   - ids:
-      - linux-builds
+#      - linux-builds
       - macos-builds
-      - freebsd-builds
+#      - freebsd-builds
     formats: [ 'tar.gz' ]
     files:
       - src: ./completions/*
@@ -92,42 +92,42 @@ changelog:
       - "^docs:"
       - "^test:"
 
-nfpms:
-  - id: linux-packages
-    # IDs of the builds for which to create packages for
-    ids:
-      - linux-builds
-    package_name: stackit
-    vendor: STACKIT
-    homepage: https://github.com/stackitcloud/stackit-cli
-    maintainer: STACKIT Developer Tools Team <developer-tools@stackit.cloud>
-    description: A command-line interface to manage STACKIT resources.
-    license: Apache 2.0
-    contents:
-      - src: LICENSE.md
-        dst: /usr/share/doc/stackit/copyright
-        file_info:
-          mode: 0644
-      - src: ./completions/stackit.bash
-        dst: /usr/share/bash-completion/completions/stackit
-        file_info:
-          mode: 0644
-      - src: ./completions/stackit.zsh
-        dst: /usr/share/zsh/vendor-completions/_stackit
-        file_info:
-          mode: 0644
-      - src: ./completions/stackit.fish
-        dst: /usr/share/fish/vendor_completions.d/stackit.fish
-        file_info:
-          mode: 0644
-    formats:
-      - deb
-      - rpm
-
-    rpm:
-      # The package is signed if a key_file is set
-      signature:
-        key_file: "{{ .Env.GPG_KEY_PATH }}"
+#nfpms:
+#  - id: linux-packages
+#    # IDs of the builds for which to create packages for
+#    ids:
+#      - linux-builds
+#    package_name: stackit
+#    vendor: STACKIT
+#    homepage: https://github.com/stackitcloud/stackit-cli
+#    maintainer: STACKIT Developer Tools Team <developer-tools@stackit.cloud>
+#    description: A command-line interface to manage STACKIT resources.
+#    license: Apache 2.0
+#    contents:
+#      - src: LICENSE.md
+#        dst: /usr/share/doc/stackit/copyright
+#        file_info:
+#          mode: 0644
+#      - src: ./completions/stackit.bash
+#        dst: /usr/share/bash-completion/completions/stackit
+#        file_info:
+#          mode: 0644
+#      - src: ./completions/stackit.zsh
+#        dst: /usr/share/zsh/vendor-completions/_stackit
+#        file_info:
+#          mode: 0644
+#      - src: ./completions/stackit.fish
+#        dst: /usr/share/fish/vendor_completions.d/stackit.fish
+#        file_info:
+#          mode: 0644
+#    formats:
+#      - deb
+#      - rpm
+#
+#    rpm:
+#      # The package is signed if a key_file is set
+#      signature:
+#        key_file: "{{ .Env.GPG_KEY_PATH }}"
 
 homebrew_casks:
   - name: stackit
@@ -135,6 +135,14 @@ homebrew_casks:
     repository:
       owner: stackitcloud
       name: homebrew-tap
+      branch: "{{.ProjectName}}-{{.Version}}"
+      pull_request:
+        enabled: true
+        base:
+          owner: marceljk
+          name: homebrew-tap-stackit-cli-fork
+          branch: main
+          token: "{{ .Env.HOMEBREW_RELEASE_TOKEN }}"
     commit_author:
       name: CLI Release Bot
       email: noreply@stackit.de
@@ -149,25 +157,25 @@ homebrew_casks:
       bash: ./completions/stackit.bash
       fish: ./completions/stackit.fish
 
-snapcrafts:
-  # IDs of the builds for which to create packages for
-  - ids:
-      - linux-builds
-    # The name of the snap
-    name: stackit
-    # The canonical title of the application, displayed in the software
-    # centre graphical frontends
-    title: STACKIT CLI
-    summary: A command-line interface to manage STACKIT resources.
-    description: "A command-line interface to manage STACKIT resources."
-    license: Apache-2.0
-    confinement: classic
-    # Grade "devel" will only release to `edge` and `beta` channels
-    # Grade "stable" will also release to the `candidate` and `stable` channels
-    grade: stable
-    # Whether to publish the Snap to the store
-    publish: true
-    apps:
-      stackit:
-        command: stackit
-        completer: completions/stackit.bash
+#snapcrafts:
+#  # IDs of the builds for which to create packages for
+#  - ids:
+#      - linux-builds
+#    # The name of the snap
+#    name: stackit
+#    # The canonical title of the application, displayed in the software
+#    # centre graphical frontends
+#    title: STACKIT CLI
+#    summary: A command-line interface to manage STACKIT resources.
+#    description: "A command-line interface to manage STACKIT resources."
+#    license: Apache-2.0
+#    confinement: classic
+#    # Grade "devel" will only release to `edge` and `beta` channels
+#    # Grade "stable" will also release to the `candidate` and `stable` channels
+#    grade: stable
+#    # Whether to publish the Snap to the store
+#    publish: true
+#    apps:
+#      stackit:
+#        command: stackit
+#        completer: completions/stackit.bash

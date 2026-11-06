@@ -18,7 +18,7 @@ permissions:
 jobs:
   goreleaser:
     name: Release
-    runs-on: macOS-latest
+    runs-on: ubuntu-latest
     #    env:
     #      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
     steps:

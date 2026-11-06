@@ -133,15 +133,15 @@ homebrew_casks:
   - name: stackit
     directory: Casks
     repository:
-      owner: stackitcloud
-      name: homebrew-tap
+      owner: marceljk
+      name: homebrew-tap-stackit-cli-fork
       branch: "{{.ProjectName}}-{{.Version}}"
       pull_request:
         enabled: true
         token: "{{ .Env.HOMEBREW_RELEASE_TOKEN }}"
         base:
-          owner: marceljk
-          name: homebrew-tap-stackit-cli-fork
+          owner: stackitcloud
+          name: homebrew-tap
           branch: main
     commit_author:
       name: CLI Release Bot

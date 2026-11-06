@@ -136,9 +136,9 @@ homebrew_casks:
       owner: marceljk
       name: homebrew-tap-stackit-cli-fork
       branch: "{{.ProjectName}}-{{.Version}}"
+      token: "{{ .Env.HOMEBREW_RELEASE_TOKEN }}"
       pull_request:
         enabled: true
-        token: "{{ .Env.HOMEBREW_RELEASE_TOKEN }}"
         base:
           owner: stackitcloud
           name: homebrew-tap
